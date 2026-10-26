@@ -78,9 +78,43 @@ Invoke-Logged 'build_dependency_inventory' { & $Python -m pip freeze --all }
 
 $pcFile = & $Python -c "import pathlib,scipy_openblas64; print(next((pathlib.Path(scipy_openblas64.__file__).parent/'lib'/'pkgconfig').glob('scipy-openblas.pc')))"
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $pcFile.Trim())) { throw "scipy-openblas pkg-config file missing: $pcFile" }
+$pcFilePath = (Resolve-Path -LiteralPath $pcFile.Trim()).Path
+$pcFileStem = [IO.Path]::GetFileNameWithoutExtension($pcFilePath)
+if ($pcFileStem -ne 'scipy-openblas') { throw "Unexpected pkg-config module name: $pcFileStem" }
+$pcContents = Get-Content -LiteralPath $pcFilePath -Raw
+if ($pcContents -notmatch '(?m)^version=0\.3\.34\.237\.2\s*$' -or
+    $pcContents -notmatch '(?m)^Libs:.*-llibscipy_openblas64_' -or
+    $pcContents -notmatch '(?m)^Cflags:.*-DHAVE_BLAS_ILP64') {
+    throw "scipy-openblas pkg-config metadata does not match the locked ILP64 runtime: $pcFilePath"
+}
 $env:PKG_CONFIG = Join-Path $Venv 'Scripts\pkg-config.exe'
 $env:PKG_CONFIG_PATH = Split-Path $pcFile.Trim()
-Invoke-Logged 'openblas_pkgconfig' { & $env:PKG_CONFIG --modversion openblas }
+Write-Host "OpenBLAS pkg-config file: $pcFilePath"
+Write-Host "OpenBLAS pkg-config module: $pcFileStem"
+
+function Invoke-PkgConfig {
+    param([string]$Label, [string[]]$Arguments)
+    Write-Host "===== $Label ====="
+    $output = @(& $env:PKG_CONFIG @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
+    $output | Set-Content -Encoding utf8 (Join-Path $Reports "$Label.log")
+    Write-Host ($output -join "`n")
+    if ($exitCode -ne 0) { throw "$Label failed with exit code $exitCode" }
+    if (-not $output -or -not (($output -join '').Trim())) { throw "$Label returned empty output" }
+    return ($output -join "`n").Trim()
+}
+
+$pkgVersion = Invoke-PkgConfig 'openblas_pkgconfig_version' @('--modversion','scipy-openblas')
+if ($pkgVersion -ne '0.3.34.237.2') { throw "Unexpected scipy-openblas pkg-config version: $pkgVersion" }
+$pkgLibs = Invoke-PkgConfig 'openblas_pkgconfig_libs' @('--libs','scipy-openblas')
+if ($pkgLibs -notmatch '-llibscipy_openblas64_' -or $pkgLibs -notmatch '(?i)scipy_openblas64[/\\]lib') {
+    throw "scipy-openblas linker flags do not reference the locked ILP64 library: $pkgLibs"
+}
+$pkgCflags = Invoke-PkgConfig 'openblas_pkgconfig_cflags' @('--cflags','scipy-openblas')
+if ($pkgCflags -notmatch '(?i)-I\S*scipy_openblas64.*include' -or
+    $pkgCflags -notmatch '-DHAVE_BLAS_ILP64' -or $pkgCflags -notmatch '-DBLAS_SYMBOL_SUFFIX=64_') {
+    throw "scipy-openblas compiler flags do not identify the expected ILP64 interface: $pkgCflags"
+}
 
 Invoke-Logged 'download_hash_pinned_numpy_source' {
     & $Python -m pip download --no-deps --no-binary=numpy --require-hashes --index-url https://pypi.org/simple -r (Join-Path $Repo 'requirements-source.lock') --dest $SourceDir
