@@ -34,8 +34,8 @@ if ($LASTEXITCODE -ne 0 -or $pyInfo.Trim() -ne '3.12.10 64') { throw "Expected C
 
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
 if (-not (Test-Path $vswhere)) { throw "vswhere.exe missing: $vswhere" }
-$vsPath = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
-if ($LASTEXITCODE -ne 0 -or -not $vsPath) { throw 'No Visual Studio x64 MSVC toolchain found' }
+$vsPath = & $vswhere -latest -products '*' -version '[17.0,18.0)' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+if ($LASTEXITCODE -ne 0 -or -not $vsPath) { throw 'No Visual Studio 2022 x64 MSVC toolchain found' }
 $devCmd = Join-Path $vsPath 'Common7\Tools\VsDevCmd.bat'
 if (-not (Test-Path $devCmd)) { throw "VsDevCmd.bat missing: $devCmd" }
 $cmdLine = 'call "' + $devCmd + '" -arch=x64 -host_arch=x64 >nul && set'
@@ -61,11 +61,21 @@ if (-not $dumpbin) { throw 'x64 dumpbin.exe not found in the selected Visual Stu
     dumpbin_path = $dumpbin.FullName
     runner_temp_volume = "$DriveName`:\"
     runner_free_before_bytes = $FreeBeforeBytes
+    expected_compiler_family = 'Visual Studio 2022 / MSVC 19.44.x (v143) x64'
     built_at_utc = [DateTime]::UtcNow.ToString('o')
 } | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $Reports 'build_environment.json')
 $MsvcProbeSource = Join-Path $env:RUNNER_TEMP 'u21ao_msvc_version_probe.cpp'
 [IO.File]::WriteAllText($MsvcProbeSource, "int main() { return 0; }`n", [Text.Encoding]::ASCII)
 Invoke-Logged 'msvc_version' { & $cl.Source /Bv /Zs $MsvcProbeSource }
+$msvcVersionText = Get-Content -LiteralPath (Join-Path $Reports 'msvc_version.log') -Raw
+if ($msvcVersionText -notmatch 'Compiler Version\s+(?<version>19\.44\.\d+)\s+for x64') {
+    throw 'Expected the VS 2022 MSVC 19.44.x x64 compiler; see msvc_version.log'
+}
+$MsvcVersion = $Matches['version']
+$envReportPath = Join-Path $Reports 'build_environment.json'
+$envReport = Get-Content -LiteralPath $envReportPath -Raw | ConvertFrom-Json
+$envReport | Add-Member -NotePropertyName msvc_compiler_version -NotePropertyValue $MsvcVersion
+$envReport | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 $envReportPath
 Invoke-Logged 'python_version' { & $BasePython --version }
 
 & $BasePython -m venv $Venv

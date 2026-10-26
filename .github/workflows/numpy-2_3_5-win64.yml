@@ -12,8 +12,8 @@ concurrency:
 
 jobs:
   build:
-    # Standard public-repository Windows x64 runner with VS 2026/MSVC; manual only.
-    runs-on: windows-2025-vs2026
+    # Free standard public-repository Windows x64 runner with VS 2022/MSVC 14.44; manual only.
+    runs-on: windows-2022
     timeout-minutes: 90
     steps:
       - name: Checkout sanitized build harness

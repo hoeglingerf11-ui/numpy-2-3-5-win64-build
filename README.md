@@ -1,6 +1,6 @@
 # Reproducible NumPy 2.3.5 Windows x64 build
 
-A manual-only GitHub Actions workflow builds the official NumPy 2.3.5 source distribution for CPython 3.12.10 x64 on GitHub's standard windows-2025-vs2026 runner. Before importing NumPy, it inventories PE imports, repairs the wheel with the hash-locked scipy-openblas64 runtime using delvewheel, and tests the repaired wheel in a fresh venv where scipy-openblas64 is not installed as a Python package.
+A manual-only GitHub Actions workflow builds the official NumPy 2.3.5 source distribution for CPython 3.12.10 x64 on GitHub's standard `windows-2022` runner. The runner image inventory lists CPython 3.12.10 x64 and Visual Studio Enterprise 2022 17.14; Microsoft maps VS 17.14 to MSVC 14.44 (v143). The build script verifies the actual x64 compiler version and stops if it is not 19.44.x. Before importing NumPy, it inventories PE imports, repairs the wheel with the unchanged hash-locked scipy-openblas64 runtime using delvewheel, and tests the repaired wheel in a fresh venv where scipy-openblas64 is not installed as a Python package.
 
 ## Public repository disclosure
 

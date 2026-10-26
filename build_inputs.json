@@ -2,7 +2,7 @@
   "schema": "u21ao-numpy-build-inputs-v1",
   "workflow": {
     "trigger": "workflow_dispatch only",
-    "runner_label": "windows-2025-vs2026",
+    "runner_label": "windows-2022",
     "python": "CPython 3.12.10 x64",
     "timeout_minutes": 90,
     "secret_inputs": [],
@@ -10,15 +10,21 @@
   },
   "runner_components": [
     {
-      "name": "GitHub-hosted Windows Server 2025 with Visual Studio Enterprise 2026 and MSVC x64",
+      "name": "GitHub-hosted Windows Server 2022 with Visual Studio Enterprise 2022 17.14 and MSVC x64 (v143 / 14.44)",
       "license_context": "Provided as a GitHub-hosted build environment; no compiler or SDK file is included in the wheel artifact",
-      "source": "https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-VS2026-Readme.md"
+      "source": "https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md"
+    },
+    {
+      "name": "MSVC compiler",
+      "version": "19.44.x x64 (VS 2022 17.14 / v143 / toolset 14.44)",
+      "license_context": "Runner-provided compiler; actual compiler version is asserted by ci/build_numpy.ps1 and compiler binaries are not included in artifacts",
+      "source": "https://learn.microsoft.com/en-us/cpp/overview/compiler-versions?view=msvc-170"
     },
     {
       "name": "CPython",
       "version": "3.12.10 x64",
       "license": "Python Software Foundation License 2.0",
-      "source": "Runner image software inventory: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-VS2026-Readme.md"
+      "source": "Runner image software inventory: https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md"
     }
   ],
   "actions": [
