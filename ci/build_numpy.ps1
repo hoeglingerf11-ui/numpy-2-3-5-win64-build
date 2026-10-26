@@ -59,7 +59,9 @@ if (-not $dumpbin) { throw 'x64 dumpbin.exe not found in the selected Visual Stu
     runner_free_before_bytes = $FreeBeforeBytes
     built_at_utc = [DateTime]::UtcNow.ToString('o')
 } | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $Reports 'build_environment.json')
-Invoke-Logged 'msvc_version' { cl.exe /Bv }
+$MsvcProbeSource = Join-Path $env:RUNNER_TEMP 'u21ao_msvc_version_probe.cpp'
+[IO.File]::WriteAllText($MsvcProbeSource, "int main() { return 0; }`n", [Text.Encoding]::ASCII)
+Invoke-Logged 'msvc_version' { & $cl.Source /Bv /Zs $MsvcProbeSource }
 Invoke-Logged 'python_version' { & $BasePython --version }
 
 & $BasePython -m venv $Venv
