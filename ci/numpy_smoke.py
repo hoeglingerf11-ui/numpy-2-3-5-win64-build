@@ -95,8 +95,7 @@ def main() -> None:
     u, s, vt = np.linalg.svd(a)
     np.testing.assert_allclose(u @ np.diag(s) @ vt, a, rtol=1e-12, atol=1e-12)
     determinant = float(np.linalg.det(a))
-    if determinant != 5.0:
-        raise AssertionError(f"Unexpected determinant: {determinant}")
+    np.testing.assert_allclose(determinant, 5.0, rtol=1e-12, atol=1e-12)
 
     modules = loaded_modules()
     selected = [p for p in modules if re.search(r"(numpy|openblas|vcruntime|msvcp)", Path(p).name, re.I)]
@@ -108,6 +107,12 @@ def main() -> None:
         raise AssertionError(f"Expected one loaded scipy-openblas64 DLL, found: {openblas_modules}")
     if not any(part.casefold() == "numpy.libs" for part in Path(openblas_modules[0]).parts):
         raise AssertionError(f"OpenBLAS was not loaded from NumPy's vendored numpy.libs directory: {openblas_modules[0]}")
+    microsoft_crt_modules = [
+        p for p in modules
+        if re.fullmatch(r"(?:(?:msvcp|vcruntime)140(?:_[0-9]+)?|ucrtbase)\.dll", Path(p).name, re.I)
+    ]
+    if not microsoft_crt_modules:
+        raise AssertionError("No Microsoft VC++ CRT DLL load path was observed")
     if importlib.util.find_spec("scipy_openblas64") is not None:
         raise AssertionError("scipy_openblas64 is separately installed in the smoke environment")
     dll_records = []
@@ -143,6 +148,7 @@ def main() -> None:
         },
         "linalg": {"solve": x.tolist(), "determinant": determinant, "svd_singular_values": s.tolist()},
         "loaded_runtime_modules": dll_records,
+        "loaded_microsoft_crt_paths": microsoft_crt_modules,
         "loaded_vendored_openblas_path": openblas_modules[0],
         "numpy_show_config": config,
         "elapsed_seconds": time.perf_counter() - started,

@@ -1,0 +1,114 @@
+name: Run 5 NumPy wheel runtime smoke (no rebuild)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: u21ap-run5-numpy-runtime-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    # Standard public-repository runner; this job only tests the saved Run 5 wheel.
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Checkout smoke harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up exact CPython 3.12.10 x64
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+          check-latest: false
+
+      - name: Download the existing Run 5 artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: numpy-2.3.5-cp312-win_amd64-40409961630
+          repository: hoeglingerf11-ui/numpy-2-3-5-win64-build
+          run-id: 40409961630
+          github-token: ${{ github.token }}
+          path: run5-artifact
+
+      - name: Verify wheel and install into a fresh offline venv
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $reportDir = Join-Path $env:GITHUB_WORKSPACE 'artifacts\reports'
+          New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
+
+          $basePython = (Get-Command python -ErrorAction Stop).Source
+          $pythonInfo = & $basePython -c 'import struct,sys; print(".".join(map(str,sys.version_info[:3])), struct.calcsize("P")*8)'
+          if ($LASTEXITCODE -ne 0 -or $pythonInfo.Trim() -ne '3.12.10 64') {
+            throw "Expected CPython 3.12.10 x64, got: $pythonInfo"
+          }
+
+          $wheelName = 'numpy-2.3.5-cp312-cp312-win_amd64.whl'
+          $wheel = Join-Path $env:GITHUB_WORKSPACE "run5-artifact\wheel\repaired\$wheelName"
+          if (-not (Test-Path -LiteralPath $wheel -PathType Leaf)) { throw "Run 5 repaired wheel missing: $wheel" }
+          $expectedHash = '105e4c29ea42d74ea61b6a39ec70fd1d5f53d508468aa8ae6d4c9118e88f40e1'
+          $actualHash = (Get-FileHash -LiteralPath $wheel -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) { throw "Repaired wheel SHA-256 mismatch: $actualHash" }
+
+          $manifest = Join-Path $env:GITHUB_WORKSPACE 'run5-artifact\SHA256SUMS.txt'
+          if (-not (Test-Path -LiteralPath $manifest -PathType Leaf)) { throw 'Run 5 SHA256SUMS.txt missing' }
+          $manifestHash = $null
+          foreach ($line in Get-Content -LiteralPath $manifest) {
+            if ($line -match '^([0-9a-fA-F]{64})\s{2}(.+)$') {
+              $entryPath = $Matches[2].Replace([char]92, [char]47)
+              if ($entryPath -eq 'wheel/repaired/numpy-2.3.5-cp312-cp312-win_amd64.whl') {
+                $manifestHash = $Matches[1].ToLowerInvariant()
+                break
+              }
+            }
+          }
+          if ($manifestHash -ne $expectedHash) { throw "Run 5 artifact manifest hash mismatch: $manifestHash" }
+
+          $venv = Join-Path $env:RUNNER_TEMP 'u21ap-run5-runtime-smoke-venv'
+          if (Test-Path -LiteralPath $venv) { throw "Expected a fresh venv path, found existing directory: $venv" }
+          & $basePython -m venv $venv
+          if ($LASTEXITCODE -ne 0) { throw "Fresh venv creation failed: $LASTEXITCODE" }
+          $smokePython = Join-Path $venv 'Scripts\python.exe'
+          & $smokePython -m pip install --no-index --no-deps $wheel
+          if ($LASTEXITCODE -ne 0) { throw "Offline local wheel installation failed: $LASTEXITCODE" }
+
+          $preflight = [ordered]@{
+            status = 'PASS'
+            source_run_id = 40409961630
+            source_artifact_id = 12693386493
+            source_artifact_sha256 = '94cbda84953db26ae37868274a8841382a85f8c378f98326f3c28bdbd7e215ce'
+            python = $pythonInfo.Trim()
+            repaired_wheel = $wheelName
+            repaired_wheel_sha256 = $actualHash
+            installed_with_no_index = $true
+            installed_with_no_deps = $true
+          }
+          $preflight | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 (Join-Path $reportDir 'run5-wheel-preflight.json')
+
+      - name: Run complete numerical and DLL runtime smoke
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $smokePython = Join-Path $env:RUNNER_TEMP 'u21ap-run5-runtime-smoke-venv\Scripts\python.exe'
+          $log = Join-Path $env:GITHUB_WORKSPACE 'artifacts\reports\numpy_smoke.log'
+          & $smokePython -I ci/numpy_smoke.py 2>&1 | Tee-Object -FilePath $log
+          $smokeExit = $LASTEXITCODE
+          if ($smokeExit -ne 0) { throw "NumPy runtime smoke failed with exit code $smokeExit" }
+
+      - name: Upload one-day smoke evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: numpy-run5-runtime-smoke-${{ github.run_id }}
+          path: artifacts/reports/
+          if-no-files-found: error
+          retention-days: 1
