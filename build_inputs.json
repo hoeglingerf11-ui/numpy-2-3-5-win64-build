@@ -107,6 +107,20 @@
       "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
       "license": "BSD-3-Clause",
       "source": "https://pypi.org/project/colorama/0.4.6/"
+    },
+    {
+      "name": "delvewheel",
+      "version": "1.13.2",
+      "sha256": "acdb03e1d7040982db65e525065f08163e9dedad54eeb8c7038be61f76c08816",
+      "license": "MIT",
+      "source": "https://pypi.org/project/delvewheel/1.13.2/"
+    },
+    {
+      "name": "pefile",
+      "version": "2024.8.26",
+      "sha256": "76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pefile/2024.8.26/"
     }
   ],
   "not_included": [

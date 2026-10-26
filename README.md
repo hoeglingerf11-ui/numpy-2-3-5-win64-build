@@ -1,10 +1,10 @@
 # Reproducible NumPy 2.3.5 Windows x64 build
 
-A manual-only GitHub Actions workflow builds the official NumPy 2.3.5 source distribution for CPython 3.12.10 x64 on GitHub's standard windows-2025-vs2026 runner. It tests NumPy imports and BLAS/LAPACK operations, records PE dependencies and loaded runtime DLL paths, and emits checksums.
+A manual-only GitHub Actions workflow builds the official NumPy 2.3.5 source distribution for CPython 3.12.10 x64 on GitHub's standard windows-2025-vs2026 runner. Before importing NumPy, it inventories PE imports, repairs the wheel with the hash-locked scipy-openblas64 runtime using delvewheel, and tests the repaired wheel in a fresh venv where scipy-openblas64 is not installed as a Python package.
 
 ## Public repository disclosure
 
-This repository is intended to be public so standard GitHub-hosted runners are free. The workflow source is visible to everyone. A successful run uploads only the NumPy wheel, the pinned OpenBLAS runtime wheel, and build/test reports. The workflow enforces a 100 MiB total artifact ceiling and one-day retention. Artifacts are public during retention. Do not add private project files, account details, credentials, proprietary sources, models, voices, or media.
+This repository is intended to be public so standard GitHub-hosted runners are free. The workflow source is visible to everyone. A successful run uploads the raw NumPy wheel, repaired NumPy wheel, pinned OpenBLAS source wheel/license evidence, and build/test reports. The workflow enforces a 100 MiB total artifact ceiling and one-day retention. Artifacts are public during retention. Do not add private project files, account details, credentials, proprietary sources, models, voices, or media.
 
 GitHub documents standard Windows runners as free and unlimited for public repositories. GitHub Free includes 500 MB shared artifact/Packages storage; this harness caps each run artifact at 100 MiB for one day. If the account's included storage is already exhausted and no payment method is present, GitHub blocks over-quota usage rather than charging it. The account's current pooled storage usage still must be checked by its owner before the run.
 

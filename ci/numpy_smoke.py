@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ctypes
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -66,6 +67,13 @@ def main() -> None:
     renamed_crt = [p for p in selected if re.fullmatch(r"msvcp140-[0-9a-f]{32}\.dll", Path(p).name, re.I)]
     if renamed_crt:
         raise AssertionError(f"Hash-named MSVC CRT dependency remains loaded: {renamed_crt}")
+    openblas_modules = [p for p in modules if "libscipy_openblas64" in Path(p).name.casefold()]
+    if len(openblas_modules) != 1:
+        raise AssertionError(f"Expected one loaded scipy-openblas64 DLL, found: {openblas_modules}")
+    if not any(part.casefold() == "numpy.libs" for part in Path(openblas_modules[0]).parts):
+        raise AssertionError(f"OpenBLAS was not loaded from NumPy's vendored numpy.libs directory: {openblas_modules[0]}")
+    if importlib.util.find_spec("scipy_openblas64") is not None:
+        raise AssertionError("scipy_openblas64 is separately installed in the smoke environment")
     dll_records = []
     for item in selected:
         path = Path(item)
@@ -89,6 +97,7 @@ def main() -> None:
         "numpy_file": np.__file__,
         "linalg": {"solve": x.tolist(), "determinant": determinant, "svd_singular_values": s.tolist()},
         "loaded_runtime_modules": dll_records,
+        "loaded_vendored_openblas_path": openblas_modules[0],
         "numpy_show_config": config,
         "elapsed_seconds": time.perf_counter() - started,
         "note": "This smoke test proves technical behavior in the hosted runner only; it is not a local SAC, MSIX, or commercial redistribution approval.",

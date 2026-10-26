@@ -26,6 +26,18 @@ jobs:
         shell: pwsh
         run: ./ci/build_numpy.ps1
 
+      - name: Record artifact hashes, including failure evidence
+        if: always()
+        shell: pwsh
+        run: |
+          $artifactDir = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          if (Test-Path -LiteralPath $artifactDir) {
+            $entries = foreach ($file in Get-ChildItem -LiteralPath $artifactDir -Recurse -File | Where-Object { $_.Name -ne 'SHA256SUMS.txt' }) {
+              '{0}  {1}' -f (Get-FileHash -Algorithm SHA256 -LiteralPath $file.FullName).Hash.ToLowerInvariant(), $file.FullName.Substring($artifactDir.Length + 1)
+            }
+            $entries | Set-Content -Encoding ascii (Join-Path $artifactDir 'SHA256SUMS.txt')
+          }
+
       - name: Enforce public artifact size ceiling
         id: artifact_size
         if: always()
