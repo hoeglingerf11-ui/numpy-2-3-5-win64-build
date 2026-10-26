@@ -1,0 +1,52 @@
+name: NumPy 2.3.5 CPython 3.12 x64 wheel
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: u21ao-numpy-2-3-5-win64
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Standard public-repository Windows x64 runner with VS 2026/MSVC; manual only.
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 90
+    steps:
+      - name: Checkout sanitized build harness
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Build, inspect and smoke-test NumPy
+        shell: pwsh
+        run: ./ci/build_numpy.ps1
+
+      - name: Enforce public artifact size ceiling
+        id: artifact_size
+        if: always()
+        shell: pwsh
+        run: |
+          $artifactDir = Join-Path $env:GITHUB_WORKSPACE 'artifacts'
+          $size = 0L
+          if (Test-Path -LiteralPath $artifactDir) {
+            $size = (Get-ChildItem -LiteralPath $artifactDir -Recurse -File | Measure-Object -Property Length -Sum).Sum
+          }
+          $limit = 100MB
+          $allowed = $size -le $limit
+          "within_limit=$($allowed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          Write-Host "Artifact bytes: $size; ceiling: $limit"
+          if (-not $allowed) { Write-Error 'Artifact exceeds the public 100 MiB ceiling; upload is skipped.' }
+
+      - name: Upload wheel and verification evidence
+        if: always() && steps.artifact_size.outputs.within_limit == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: numpy-2.3.5-cp312-win_amd64-${{ github.run_id }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 1

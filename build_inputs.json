@@ -1,0 +1,117 @@
+{
+  "schema": "u21ao-numpy-build-inputs-v1",
+  "workflow": {
+    "trigger": "workflow_dispatch only",
+    "runner_label": "windows-2025-vs2026",
+    "python": "CPython 3.12.10 x64",
+    "timeout_minutes": 90,
+    "secret_inputs": [],
+    "private_inputs": []
+  },
+  "runner_components": [
+    {
+      "name": "GitHub-hosted Windows Server 2025 with Visual Studio Enterprise 2026 and MSVC x64",
+      "license_context": "Provided as a GitHub-hosted build environment; no compiler or SDK file is included in the wheel artifact",
+      "source": "https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-VS2026-Readme.md"
+    },
+    {
+      "name": "CPython",
+      "version": "3.12.10 x64",
+      "license": "Python Software Foundation License 2.0",
+      "source": "Runner image software inventory: https://github.com/actions/runner-images/blob/main/images/windows/Windows2025-VS2026-Readme.md"
+    }
+  ],
+  "actions": [
+    {
+      "name": "actions/checkout",
+      "tag": "v4",
+      "commit": "11d5960a326750d5838078e36cf38b85af677262",
+      "license": "MIT",
+      "source": "https://github.com/actions/checkout"
+    },
+    {
+      "name": "actions/upload-artifact",
+      "tag": "v4",
+      "commit": "ea165f8d65b6e75b540449e92b4886f43607fa02",
+      "license": "MIT",
+      "source": "https://github.com/actions/upload-artifact"
+    }
+  ],
+  "pypi_inputs": [
+    {
+      "name": "numpy source",
+      "version": "2.3.5",
+      "sha256": "784db1dcdab56bf0517743e746dfb0f885fc68d948aba86eeec2cba234bdf1c0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/numpy/2.3.5/"
+    },
+    {
+      "name": "meson-python",
+      "version": "0.22.1",
+      "sha256": "258fde948cf45aab5df23fcc9e17a9050ee73d4e1002fe6cf86519f61c414778",
+      "license": "MIT",
+      "source": "https://pypi.org/project/meson-python/0.22.1/"
+    },
+    {
+      "name": "meson",
+      "version": "1.12.1",
+      "sha256": "930bc7542cbd9f57009e182fd014eba48cf1a0180a7b9006d2d32d8f168d8b02",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/meson/1.12.1/"
+    },
+    {
+      "name": "Cython",
+      "version": "3.3.0",
+      "sha256": "333449cc0350baedee5a6af27929eac8a71eac4ec59333c45ff476b33c6c660d",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/Cython/3.3.0/"
+    },
+    {
+      "name": "ninja",
+      "version": "1.13.2",
+      "sha256": "1293f4078278b70d0ee4b6cc8f3a9e030656c9b2f59909970343c4fe76070118",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/ninja/1.13.2/"
+    },
+    {
+      "name": "scipy-openblas64",
+      "version": "0.3.34.237.2",
+      "sha256": "a9115196d496c31db5065144b214d2906835843bd150b25ea175051993f0c44d",
+      "license": "BSD-2-Clause wrapper; bundled OpenBLAS BSD-3-Clause and GCC Runtime Exception terms in its license bundle",
+      "source": "https://pypi.org/project/scipy-openblas64/0.3.34.237.2/"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "source": "https://pypi.org/project/packaging/26.3/"
+    },
+    {
+      "name": "pyproject-metadata",
+      "version": "0.12.1",
+      "sha256": "f7162d580a96386a8eb096da06215f981f547d1490f03055ef99e323bc2da427",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pyproject-metadata/0.12.1/"
+    },
+    {
+      "name": "pkgconf",
+      "version": "3.0.7.post0",
+      "sha256": "e7906bb5ec1d0d074e397466075a8545f1c50cb11710768644f222ba8acebc7f",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pkgconf/3.0.7.post0/"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6",
+      "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/colorama/0.4.6/"
+    }
+  ],
+  "not_included": [
+    "Private application source or product payload",
+    "Personal or account information",
+    "Credentials, models, voice weights, generated media or user content"
+  ]
+}

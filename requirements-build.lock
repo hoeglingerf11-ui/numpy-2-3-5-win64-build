@@ -1,0 +1,21 @@
+# Exact Windows build/test dependencies, all hashes checked against the
+# official PyPI release metadata before recording in U21AN. Install with
+# --no-deps because every dependency is listed explicitly here.
+meson-python==0.22.1 \
+    --hash=sha256:258fde948cf45aab5df23fcc9e17a9050ee73d4e1002fe6cf86519f61c414778
+meson==1.12.1 \
+    --hash=sha256:930bc7542cbd9f57009e182fd014eba48cf1a0180a7b9006d2d32d8f168d8b02
+Cython==3.3.0 \
+    --hash=sha256:333449cc0350baedee5a6af27929eac8a71eac4ec59333c45ff476b33c6c660d
+ninja==1.13.2 \
+    --hash=sha256:1293f4078278b70d0ee4b6cc8f3a9e030656c9b2f59909970343c4fe76070118
+scipy-openblas64==0.3.34.237.2 \
+    --hash=sha256:a9115196d496c31db5065144b214d2906835843bd150b25ea175051993f0c44d
+packaging==26.3 \
+    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pyproject-metadata==0.12.1 \
+    --hash=sha256:f7162d580a96386a8eb096da06215f981f547d1490f03055ef99e323bc2da427
+pkgconf==3.0.7.post0 \
+    --hash=sha256:e7906bb5ec1d0d074e397466075a8545f1c50cb11710768644f222ba8acebc7f
+colorama==0.4.6 \
+    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
