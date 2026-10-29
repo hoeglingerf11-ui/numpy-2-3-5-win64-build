@@ -1,0 +1,18 @@
+name: U21BV native runtime probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  runtime-probe:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12.10'
+          architecture: x64
+      - name: Probe official Intel runtime, Torch CRT omission and US Kokoro path
+        shell: pwsh
+        run: ./ci/test_runtime.ps1
