@@ -1,4 +1,5 @@
 name: U21BV native runtime probe
+# Manual-only probe. No artifacts are uploaded; the bounded report stays in Actions logs.
 on:
   workflow_dispatch:
 permissions:
